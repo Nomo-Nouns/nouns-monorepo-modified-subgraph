@@ -1,3 +1,4 @@
+/* eslint-disable prefer-const */
 import { BigInt, log } from '@graphprotocol/graph-ts';
 import {
   AuctionBid,
@@ -7,6 +8,7 @@ import {
 } from './types/NounsAuctionHouse/NounsAuctionHouse';
 import { Auction, Noun, Bid } from './types/schema';
 import { getOrCreateAccount } from './utils/helpers';
+import { BIGINT_ZERO } from './utils/constants';
 
 export function handleAuctionCreated(event: AuctionCreated): void {
   let nounId = event.params.nounId.toString();
@@ -25,6 +27,9 @@ export function handleAuctionCreated(event: AuctionCreated): void {
   auction.amount = BigInt.fromI32(0);
   auction.startTime = event.params.startTime;
   auction.endTime = event.params.endTime;
+  auction.startBlock = event.block.number;
+  auction.endBlock = event.block.number.plus(BigInt.fromI32((24 * 60 * 60) / 14));
+  auction.settleBlock = BIGINT_ZERO;
   auction.settled = false;
   auction.save();
 }
@@ -88,6 +93,7 @@ export function handleAuctionSettled(event: AuctionSettled): void {
     return;
   }
 
+  auction.settleBlock = event.block.number;
   auction.settled = true;
   auction.save();
 }
